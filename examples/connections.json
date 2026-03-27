@@ -1,0 +1,31 @@
+{
+  "connections": [
+    {
+      "id": "dev_mssql",
+      "engine": "mssql",
+      "dsn": "Driver={ODBC Driver 17 for SQL Server};Server=localhost,1434;Database=testdb;UID=sa;PWD=TestPass123!;TrustServerCertificate=yes;Encrypt=no;",
+      "read_only": true,
+      "description": "Local MSSQL (Docker) — testdb",
+      "query_timeout": 30,
+      "max_rows": 10000
+    },
+    {
+      "id": "dev_postgres",
+      "engine": "postgres",
+      "dsn": "postgresql://testuser:testpass@localhost:5432/testdb",
+      "read_only": true,
+      "description": "Local Postgres (Docker) — testdb",
+      "query_timeout": 30,
+      "max_rows": 10000
+    },
+    {
+      "id": "dev_mysql",
+      "engine": "mysql",
+      "dsn": "mysql://testuser:testpass@localhost:3306/testdb",
+      "read_only": true,
+      "description": "Local MySQL (Docker) — testdb",
+      "query_timeout": 30,
+      "max_rows": 10000
+    }
+  ]
+}

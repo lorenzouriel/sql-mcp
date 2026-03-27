@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "sql-mcp": {
+      "command": "sql-mcp",
+      "args": ["--stdio"],
+      "env": {
+        "MSSQL_CONNECTION_STRING": "Driver={ODBC Driver 17 for SQL Server};Server=localhost,1433;Database=mydb;UID=sa;PWD=yourpassword"
+      }
+    }
+  }
+}

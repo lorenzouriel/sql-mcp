@@ -1,0 +1,136 @@
+import re
+import hashlib
+import logging
+from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
+
+WRITE_PATTERNS = [
+    r"\bINSERT\b", r"\bUPDATE\b", r"\bDELETE\b",
+    r"\bDROP\b", r"\bALTER\b", r"\bTRUNCATE\b", r"\bCREATE\b",
+    r"\bGRANT\b", r"\bDENY\b", r"\bREVOKE\b",
+]
+
+_BANNED_COMMON = [
+    r"\bDROP\b", r"\bALTER\b", r"\bTRUNCATE\b",
+    r"\bCREATE\b", r"\bGRANT\b", r"\bREVOKE\b",
+]
+_BANNED_MSSQL = _BANNED_COMMON + [
+    r"\bEXEC\b", r"\bEXECUTE\b", r"\bxp_\w+", r"\bsp_\w+",
+    r"\bKILL\b", r"\bSHUTDOWN\b", r"\bOPENROWSET\b",
+    r"\bOPENDATASOURCE\b", r"\bBULK\s+INSERT\b",
+]
+_BANNED_POSTGRES = _BANNED_COMMON + [
+    r"\bCOPY\b", r"\bPG_READ_FILE\b", r"\bPG_WRITE_FILE\b",
+    r"\bLO_IMPORT\b", r"\bLO_EXPORT\b",
+]
+_BANNED_MYSQL = _BANNED_COMMON + [
+    r"\bLOAD\s+DATA\b", r"\bINTO\s+OUTFILE\b",
+    r"\bINTO\s+DUMPFILE\b", r"\bLOAD_FILE\b",
+]
+_BANNED_SQLITE = _BANNED_COMMON + [r"\bATTACH\b", r"\bDETACH\b"]
+
+_ENGINE_BANNED: dict[str, list[str]] = {
+    "mssql": _BANNED_MSSQL,
+    "postgres": _BANNED_POSTGRES,
+    "mysql": _BANNED_MYSQL,
+    "mariadb": _BANNED_MYSQL,
+    "sqlite": _BANNED_SQLITE,
+}
+
+
+def get_banned_patterns(engine: str) -> list[str]:
+    return _ENGINE_BANNED.get(engine, _BANNED_COMMON)
+
+
+def hash_sql(sql: str) -> str:
+    return hashlib.sha256(sql.encode()).hexdigest()[:16]
+
+
+def normalize_sql(sql: str) -> str:
+    return " ".join(sql.split()).upper()
+
+
+@dataclass
+class SecurityPolicy:
+    read_only: bool = True
+    query_timeout: int = 30
+    max_rows: int = 50_000
+    max_query_length: int = 50_000
+    engine: str = "mssql"
+    banned_patterns: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if not self.banned_patterns:
+            self.banned_patterns = get_banned_patterns(self.engine)
+
+    def _has_multiple_statements(self, sql: str) -> bool:
+        stripped = sql.strip()
+        if stripped.endswith(";"):
+            stripped = stripped[:-1].strip()
+        if ";" in stripped:
+            return True
+        if self.engine == "mssql" and re.search(
+            r"^\s*GO\s*$", stripped, re.IGNORECASE | re.MULTILINE
+        ):
+            return True
+        return False
+
+    def validate_query(
+        self,
+        sql: str,
+        tool_name: str = "unknown",
+        client_id: str = "unknown",
+    ) -> tuple[bool, str | None]:
+        if not sql or not sql.strip():
+            return False, "Empty SQL query"
+
+        if len(sql) > self.max_query_length:
+            return False, (
+                f"Query exceeds maximum length of {self.max_query_length} characters"
+            )
+
+        normalized = normalize_sql(sql)
+
+        for pattern in self.banned_patterns:
+            if re.search(pattern, normalized):
+                reason = f"Query contains banned pattern: {pattern}"
+                logger.warning(
+                    "Query denied | tool=%s | reason=%s | sql_hash=%s | client=%s",
+                    tool_name, reason, hash_sql(sql), client_id,
+                )
+                return False, reason
+
+        if self._has_multiple_statements(sql):
+            return False, "Multi-statement queries are not allowed"
+
+        if self.read_only:
+            for pattern in WRITE_PATTERNS:
+                if re.search(pattern, normalized):
+                    reason = f"Query contains write operation: {pattern}"
+                    logger.warning(
+                        "Policy violation | tool=%s | reason=%s | sql_hash=%s | client=%s",
+                        tool_name, reason, hash_sql(sql), client_id,
+                    )
+                    return False, reason
+            if not re.match(r"^\s*SELECT\b", normalized):
+                return False, "Only SELECT queries are allowed in read-only mode"
+
+        logger.info(
+            "Query allowed | tool=%s | mode=%s | sql_hash=%s | client=%s",
+            tool_name,
+            "read_only" if self.read_only else "write",
+            hash_sql(sql),
+            client_id,
+        )
+        return True, None
+
+    def explain(self) -> dict:
+        return {
+            "read_only": self.read_only,
+            "query_timeout_seconds": self.query_timeout,
+            "max_rows": self.max_rows,
+            "max_query_length": self.max_query_length,
+            "engine": self.engine,
+            "banned_pattern_count": len(self.banned_patterns),
+        }

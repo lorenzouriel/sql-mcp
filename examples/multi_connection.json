@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "sql-mcp": {
+      "command": "sql-mcp",
+      "args": ["--stdio", "--config", "/path/to/connections.json"],
+      "env": {}
+    }
+  }
+}

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sql-mcp"
-version = "2.0.0"
-description = "Universal SQL MCP Server — MSSQL, PostgreSQL, MySQL, MariaDB, SQLite"
+version = "3.0.0"
+description = "Universal Database MCP — SQL, MongoDB, Databricks, Fabric and more"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -19,6 +19,9 @@ keywords = [
     "postgresql",
     "mysql",
     "sqlite",
+    "mongodb",
+    "databricks",
+    "fabric",
     "database",
     "claude",
     "ai",
@@ -42,16 +45,23 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "prometheus-client>=0.20.0",
     "uvicorn>=0.30.0",
+    "pymongo>=4.16.0",
 ]
 
 [project.optional-dependencies]
-mssql    = ["pyodbc>=4.0.35"]
-postgres = ["psycopg2-binary>=2.9.0"]
-mysql    = ["mysql-connector-python>=8.0.0"]
-all      = [
+mssql      = ["pyodbc>=4.0.35"]
+postgres   = ["psycopg2-binary>=2.9.0"]
+mysql      = ["mysql-connector-python>=8.0.0"]
+mongodb    = ["pymongo>=4.6.0"]
+databricks = ["databricks-sql-connector>=3.0.0"]
+fabric     = ["pyodbc>=4.0.35", "azure-kusto-data>=4.0.0"]
+all        = [
     "pyodbc>=4.0.35",
     "psycopg2-binary>=2.9.0",
     "mysql-connector-python>=8.0.0",
+    "pymongo>=4.6.0",
+    "databricks-sql-connector>=3.0.0",
+    "azure-kusto-data>=4.0.0",
 ]
 dev = [
     "pytest>=7.4.0",

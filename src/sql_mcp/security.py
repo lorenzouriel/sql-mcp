@@ -30,13 +30,34 @@ _BANNED_MYSQL = _BANNED_COMMON + [
 ]
 _BANNED_SQLITE = _BANNED_COMMON + [r"\bATTACH\b", r"\bDETACH\b"]
 
+# MongoDB MQL — patterns checked on raw (non-normalized) query JSON
+_BANNED_MONGODB = [
+    r"\$where",       # JavaScript execution
+    r"\$function",    # Custom JS aggregation operator
+    r"\$accumulator", # Custom JS accumulator
+    r"\$out",         # Writes aggregation results to a collection
+    r"\$merge",       # Merges aggregation results into a collection
+]
+
+# KQL (Fabric Eventhouse) — checked on raw query
+_BANNED_KQL = [
+    r"(?i)\bexternaldata\b",  # Reads from arbitrary external URLs
+    r"(?i)\bplugin\b",        # Arbitrary plugin execution
+]
+
 _ENGINE_BANNED: dict[str, list[str]] = {
-    "mssql": _BANNED_MSSQL,
-    "postgres": _BANNED_POSTGRES,
-    "mysql": _BANNED_MYSQL,
-    "mariadb": _BANNED_MYSQL,
-    "sqlite": _BANNED_SQLITE,
+    "mssql":      _BANNED_MSSQL,
+    "postgres":   _BANNED_POSTGRES,
+    "mysql":      _BANNED_MYSQL,
+    "mariadb":    _BANNED_MYSQL,
+    "sqlite":     _BANNED_SQLITE,
+    "mongodb":    _BANNED_MONGODB,
+    "databricks": _BANNED_POSTGRES,
+    "fabric":     _BANNED_MSSQL,
 }
+
+# Engines whose queries must NOT be uppercased before pattern scanning
+_RAW_QUERY_ENGINES = {"mongodb"}
 
 
 def get_banned_patterns(engine: str) -> list[str]:
@@ -90,7 +111,10 @@ class SecurityPolicy:
                 f"Query exceeds maximum length of {self.max_query_length} characters"
             )
 
-        normalized = normalize_sql(sql)
+        # Non-SQL engines (e.g. MongoDB MQL) use raw query for pattern scanning
+        # to preserve case-sensitive operators like $where, $out, etc.
+        use_raw = self.engine in _RAW_QUERY_ENGINES
+        normalized = sql if use_raw else normalize_sql(sql)
 
         for pattern in self.banned_patterns:
             if re.search(pattern, normalized):
@@ -101,10 +125,10 @@ class SecurityPolicy:
                 )
                 return False, reason
 
-        if self._has_multiple_statements(sql):
+        if not use_raw and self._has_multiple_statements(sql):
             return False, "Multi-statement queries are not allowed"
 
-        if self.read_only:
+        if self.read_only and not use_raw:
             for pattern in WRITE_PATTERNS:
                 if re.search(pattern, normalized):
                     reason = f"Query contains write operation: {pattern}"

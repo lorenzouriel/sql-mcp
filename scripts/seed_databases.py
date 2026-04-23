@@ -349,9 +349,67 @@ def seed_mssql():
 # Main
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# MongoDB
+# ---------------------------------------------------------------------------
+
+def seed_mongodb():
+    try:
+        from pymongo import MongoClient
+    except ImportError:
+        print("[mongodb]  SKIP — pymongo not installed")
+        return
+
+    dsn = "mongodb://testuser:testpass@localhost:27017/testdb?authSource=admin"
+    try:
+        client = MongoClient(dsn, serverSelectionTimeoutMS=5000)
+        db = client["testdb"]
+
+        for coll in ("order_items", "orders", "products", "customers"):
+            db.drop_collection(coll)
+
+        db["customers"].insert_many([
+            {"name": "Alice Ferreira",  "email": "alice@example.com",  "country": "Brazil"},
+            {"name": "Bob Smith",       "email": "bob@example.com",    "country": "USA"},
+            {"name": "Carlos Ruiz",     "email": "carlos@example.com", "country": "Mexico"},
+            {"name": "Diana Chen",      "email": "diana@example.com",  "country": "China"},
+            {"name": "Eve Dupont",      "email": "eve@example.com",    "country": "France"},
+        ])
+        db["products"].insert_many([
+            {"name": "Laptop Pro 15",  "category": "Electronics", "price": 1299.99, "stock": 50},
+            {"name": "Wireless Mouse", "category": "Electronics", "price":   29.99, "stock": 200},
+            {"name": "Desk Chair",     "category": "Furniture",   "price":  349.00, "stock": 30},
+            {"name": "Python Book",    "category": "Books",       "price":   49.90, "stock": 100},
+            {"name": "Coffee Maker",   "category": "Appliances",  "price":   89.99, "stock": 75},
+        ])
+        db["orders"].insert_many([
+            {"customer_id": 1, "status": "completed", "total": 1329.98},
+            {"customer_id": 2, "status": "pending",   "total":   49.90},
+            {"customer_id": 3, "status": "completed", "total":  439.00},
+            {"customer_id": 4, "status": "shipped",   "total": 1299.99},
+            {"customer_id": 5, "status": "completed", "total":  119.98},
+        ])
+        db["order_items"].insert_many([
+            {"order_id": 1, "product_id": 1, "quantity": 1, "unit_price": 1299.99},
+            {"order_id": 1, "product_id": 2, "quantity": 1, "unit_price":   29.99},
+            {"order_id": 2, "product_id": 4, "quantity": 1, "unit_price":   49.90},
+            {"order_id": 3, "product_id": 3, "quantity": 1, "unit_price":  349.00},
+            {"order_id": 3, "product_id": 2, "quantity": 1, "unit_price":   29.99},
+            {"order_id": 4, "product_id": 1, "quantity": 1, "unit_price": 1299.99},
+            {"order_id": 5, "product_id": 5, "quantity": 1, "unit_price":   89.99},
+            {"order_id": 5, "product_id": 2, "quantity": 1, "unit_price":   29.99},
+        ])
+
+        client.close()
+        print("[mongodb]  OK — customers, products, orders, order_items seeded")
+    except Exception as e:
+        print(f"[mongodb]  ERROR — {e}")
+
+
 if __name__ == "__main__":
     print("Seeding databases...")
     seed_postgres()
     seed_mysql()
     seed_mssql()
+    seed_mongodb()
     print("Done.")

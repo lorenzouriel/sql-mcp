@@ -80,6 +80,52 @@ def mssql_dsn():
 
 
 # ---------------------------------------------------------------------------
+# MongoDB
+# ---------------------------------------------------------------------------
+
+_COMPOSE_MONGODB_DSN = "mongodb://testuser:testpass@localhost:27017/testdb?authSource=admin"
+
+
+@pytest.fixture(scope="session")
+def mongodb_dsn():
+    if _USE_COMPOSE:
+        yield _COMPOSE_MONGODB_DSN
+        return
+
+    try:
+        from testcontainers.mongodb import MongoDbContainer
+    except ImportError:
+        pytest.skip("testcontainers not installed — set SQL_MCP_TEST_USE_COMPOSE=1 to use docker-compose")
+
+    with MongoDbContainer("mongo:7") as mongo:
+        yield mongo.get_connection_url()
+
+
+# ---------------------------------------------------------------------------
+# Databricks  (cloud-only; requires env var)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="session")
+def databricks_dsn():
+    dsn = os.environ.get("DATABRICKS_TEST_DSN")
+    if not dsn:
+        pytest.skip("Set DATABRICKS_TEST_DSN env var to run Databricks integration tests")
+    yield dsn
+
+
+# ---------------------------------------------------------------------------
+# Fabric Warehouse  (cloud-only; requires env var)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="session")
+def fabric_warehouse_dsn():
+    dsn = os.environ.get("FABRIC_WAREHOUSE_TEST_DSN")
+    if not dsn:
+        pytest.skip("Set FABRIC_WAREHOUSE_TEST_DSN env var to run Fabric Warehouse integration tests")
+    yield dsn
+
+
+# ---------------------------------------------------------------------------
 # SQLite  (always available, no container needed)
 # ---------------------------------------------------------------------------
 

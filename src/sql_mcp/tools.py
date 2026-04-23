@@ -63,6 +63,52 @@ async def execute_sql(
 
 
 @mcp.tool()
+async def execute_native_query(
+    query: str,
+    collection: str,
+    format: str = "table",
+    connection_id: Optional[str] = None,
+) -> str:
+    """Execute a native query on a document store (e.g. MongoDB MQL).
+    Use when query_language is 'mql'. For SQL/SparkSQL/KQL engines use execute_sql.
+
+    query: JSON string — dict for MQL filter, list for aggregation pipeline.
+    collection: collection name to query against.
+    """
+    try:
+        entry = get_registry().resolve(connection_id)
+    except (ValueError, RuntimeError) as e:
+        return f"ERROR: {e}"
+    conn_label = connection_id or "default"
+
+    is_allowed, reason = entry.policy.validate_query(query, tool_name="execute_native_query")
+    if not is_allowed:
+        record_query_blocked(reason or "unknown", entry.adapter.engine_name, conn_label)
+        return f"ERROR: Query not allowed - {reason}"
+
+    with MetricsContext("execute_native_query", entry.adapter.engine_name, conn_label) as m:
+        try:
+            result = await entry.adapter.execute_native_query(
+                query,
+                collection=collection,
+                timeout=entry.policy.query_timeout,
+                max_rows=entry.policy.max_rows,
+            )
+            m.set_rows(len(result))
+            cols, rows = _to_cols_rows(result)
+            if format.lower() == "json":
+                out = format_json(cols, rows)
+            elif format.lower() == "csv":
+                out = format_csv(cols, rows)
+            else:
+                out = format_table(cols, rows) if cols else "(no result)"
+            return f"{out}\n\n[{result_summary(cols, rows)}]"
+        except Exception as e:
+            logger.exception("execute_native_query failed")
+            return f"ERROR: {type(e).__name__}: {e}"
+
+
+@mcp.tool()
 async def list_schemas(connection_id: Optional[str] = None) -> str:
     """List all schemas. Specify connection_id when multiple databases are connected."""
     entry = get_registry().resolve(connection_id)

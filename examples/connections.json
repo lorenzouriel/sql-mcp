@@ -26,6 +26,42 @@
       "description": "Local MySQL (Docker) — testdb",
       "query_timeout": 30,
       "max_rows": 10000
+    },
+    {
+      "id": "dev_mongodb",
+      "engine": "mongodb",
+      "dsn": "mongodb://testuser:testpass@localhost:27017/testdb?authSource=admin",
+      "read_only": true,
+      "description": "Local MongoDB (Docker) — testdb",
+      "query_timeout": 30,
+      "max_rows": 10000
+    },
+    {
+      "id": "dev_databricks",
+      "engine": "databricks",
+      "dsn": "databricks://mytoken@adb-1234567890.azuredatabricks.net?http_path=/sql/1.0/warehouses/abc123&catalog=main&schema=default",
+      "read_only": true,
+      "description": "Databricks SQL Warehouse — main catalog",
+      "query_timeout": 60,
+      "max_rows": 10000
+    },
+    {
+      "id": "dev_fabric_warehouse",
+      "engine": "fabric",
+      "dsn": "Driver={ODBC Driver 18 for SQL Server};Server=myworkspace.datawarehouse.fabric.microsoft.com;Database=MyWarehouse;Authentication=ActiveDirectoryInteractive;Encrypt=yes;",
+      "read_only": true,
+      "description": "Microsoft Fabric Warehouse — T-SQL",
+      "query_timeout": 60,
+      "max_rows": 10000
+    },
+    {
+      "id": "dev_fabric_eventhouse",
+      "engine": "fabric",
+      "dsn": "kql://mycluster.eastus.kusto.windows.net/MyDatabase",
+      "read_only": true,
+      "description": "Microsoft Fabric Eventhouse — KQL",
+      "query_timeout": 60,
+      "max_rows": 10000
     }
   ]
 }

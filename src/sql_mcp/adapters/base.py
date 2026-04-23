@@ -8,6 +8,16 @@ class DatabaseAdapter(ABC):
     @abstractmethod
     def engine_name(self) -> str: ...
 
+    @property
+    def query_language(self) -> str:
+        """Query language token: sql | sparksql | mql | kql. Defaults to 'sql'."""
+        return "sql"
+
+    @property
+    def supports_sql(self) -> bool:
+        """True if execute_query() accepts SQL strings."""
+        return self.query_language in ("sql", "sparksql")
+
     @abstractmethod
     async def connect(self, dsn: str) -> None: ...
 
@@ -21,6 +31,20 @@ class DatabaseAdapter(ABC):
         timeout: int = 30,
         max_rows: int = 50_000,
     ) -> list[dict[str, Any]]: ...
+
+    async def execute_native_query(
+        self,
+        query: str,
+        collection: str,
+        timeout: int = 30,
+        max_rows: int = 50_000,
+    ) -> list[dict[str, Any]]:
+        """Execute a native (non-SQL) query such as MQL for MongoDB.
+        SQL adapters raise NotImplementedError — use execute_query() instead."""
+        raise NotImplementedError(
+            f"Engine '{self.engine_name}' does not support native queries. "
+            f"Use execute_query() with {self.query_language.upper()} syntax instead."
+        )
 
     @abstractmethod
     async def list_schemas(self) -> list[str]: ...

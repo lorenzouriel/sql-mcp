@@ -1,30 +1,37 @@
-# sql-mcp
+<div align="center">
+  <img src="docs/imgs/logo-only-nobg.png" alt="logo" width="200">
+</div>
 
-> Universal SQL MCP server — connect Claude to MSSQL, PostgreSQL, MySQL, MariaDB, and SQLite through a single interface.
+# sql-mcp
+> One MCP to rule them all — connect Claude/Frameworks to MSSQL, PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, Databricks, and Microsoft Fabric through a single interface.
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![MCP](https://img.shields.io/badge/MCP-1.2%2B-purple)
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/badge/version-3.0.0-blue)
 
 ## Overview
-
 sql-mcp is a [Model Context Protocol](https://modelcontextprotocol.io/) server that gives Claude (and any other MCP-compatible client) direct, structured access to your databases. Instead of copy-pasting query results into a chat window, Claude can explore schemas, run queries, and reason over live data on your behalf.
 
-The server supports five database engines — Microsoft SQL Server, PostgreSQL, MySQL, MariaDB, and SQLite — behind a single binary. You can connect to one database for a focused workflow, or register up to twenty connections simultaneously and let Claude query across all of them in a single conversation.
+The server supports **eight database engines** — Microsoft SQL Server, PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, Databricks, and Microsoft Fabric — behind a single binary. You can connect to one database for a focused workflow, or register up to twenty connections simultaneously and let Claude query across all of them in a single conversation.
 
-sql-mcp evolved from `mssql-mcp-python` and is designed for developers and data teams who want to bring AI-assisted SQL into their existing infrastructure without giving up control. Every connection defaults to read-only mode, and a layered security policy blocks destructive SQL patterns before they ever reach the database.
+SQL engines use standard SQL. MongoDB uses MQL (JSON-based filter or aggregation pipeline). Databricks uses SparkSQL. Microsoft Fabric supports both T-SQL (Warehouse) and KQL (Eventhouse). The MCP surface is identical regardless of engine — Claude picks the right tool automatically.
+
+Every connection defaults to read-only mode, and a layered security policy blocks destructive patterns before they ever reach the database.
 
 ## Features
 
-- Single server for MSSQL, PostgreSQL, MySQL, MariaDB, and SQLite
+- Single server for MSSQL, PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, Databricks, and Microsoft Fabric
 - Multi-connection registry — up to 20 named connections in one session
 - Read-only by default with an explicit opt-in for writes
+- `execute_native_query` for MongoDB MQL and other non-SQL engines
 - Per-engine banned pattern lists block destructive DDL, system procedures, and file I/O commands
+- MongoDB-specific security: `$where`, `$function`, `$accumulator`, `$out`, `$merge` blocked
 - Multi-statement query blocking prevents semicolon-chained attacks
 - Per-connection query timeout (1–300 seconds) and row cap (1–500,000)
 - Three output formats: table, JSON, and CSV
-- Structured JSON logging with configurable log level
+- Optional adapters via Python extras — base install stays lean
+- Structured JSON logging with configurable log level and sensitive data redaction
 - Prometheus metrics endpoint (HTTP transport)
 - HTTP transport with `/health`, `/ready`, `/info`, and `/metrics` endpoints
 - Backward-compatible with `MSSQL_CONNECTION_STRING` environment variable from v1
@@ -34,7 +41,7 @@ sql-mcp evolved from `mssql-mcp-python` and is designed for developers and data 
 ### Prerequisites
 
 - Python 3.10 or later
-- For MSSQL: [ODBC Driver 17 for SQL Server](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server)
+- For MSSQL / Fabric Warehouse: [ODBC Driver 17 or 18 for SQL Server](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server)
 - Claude Desktop (or any MCP client)
 
 ### Installation
@@ -50,6 +57,15 @@ pip install "sql-mcp[postgres]"
 
 # MySQL / MariaDB only
 pip install "sql-mcp[mysql]"
+
+# MongoDB only
+pip install "sql-mcp[mongodb]"
+
+# Databricks only
+pip install "sql-mcp[databricks]"
+
+# Microsoft Fabric (Warehouse + Eventhouse)
+pip install "sql-mcp[fabric]"
 
 # All engines
 pip install "sql-mcp[all]"
@@ -109,7 +125,7 @@ The Claude Desktop configuration file is located at:
 
 After editing the file, **restart Claude Desktop** for the changes to take effect.
 
-### Basic Usage (single-connection)
+### Basic Usage
 
 Start the server from the command line for any supported engine:
 
@@ -126,13 +142,22 @@ sql-mcp --engine mysql --dsn "mysql://user:pass@localhost:3306/mydb"
 # SQLite
 sql-mcp --engine sqlite --dsn "/path/to/app.db"
 
+# MongoDB
+sql-mcp --engine mongodb --dsn "mongodb://user:pass@localhost:27017/mydb?authSource=admin"
+
+# Databricks
+sql-mcp --engine databricks --dsn "databricks://token@<host>?http_path=/sql/1.0/warehouses/<id>&catalog=main&schema=default"
+
+# Microsoft Fabric Warehouse
+sql-mcp --engine fabric --dsn "Driver={ODBC Driver 18 for SQL Server};Server=<workspace>.datawarehouse.fabric.microsoft.com;UID=user@org.com;PWD=secret;Authentication=ActiveDirectoryPassword;Encrypt=yes;"
+
 # Enable write operations (read-only is the default)
 sql-mcp --engine postgres --dsn "postgresql://..." --write
 ```
 
 ## Multi-Connection Setup
 
-Create a `connections.json` file to register multiple databases:
+Create a `connections.json` file to register multiple databases across any combination of engines:
 
 ```json
 {
@@ -156,13 +181,22 @@ Create a `connections.json` file to register multiple databases:
       "max_rows": 50000
     },
     {
-      "id": "app_mysql",
-      "engine": "mysql",
-      "dsn": "mysql://app_user:secret@app-db.internal:3306/appdb",
-      "read_only": false,
-      "description": "Application MySQL — read/write access",
-      "query_timeout": 10,
+      "id": "app_mongodb",
+      "engine": "mongodb",
+      "dsn": "mongodb://user:pass@mongo.internal:27017/appdb?authSource=admin",
+      "read_only": true,
+      "description": "Application MongoDB — document store",
+      "query_timeout": 30,
       "max_rows": 5000
+    },
+    {
+      "id": "datalake",
+      "engine": "databricks",
+      "dsn": "databricks://token@<host>?http_path=/sql/1.0/warehouses/<id>&catalog=main",
+      "read_only": true,
+      "description": "Databricks SQL Warehouse",
+      "query_timeout": 60,
+      "max_rows": 10000
     }
   ]
 }
@@ -184,30 +218,72 @@ export SQL_MCP_CONNECTIONS='[
 sql-mcp
 ```
 
-Once connected, use `list_connections` in Claude to see available databases, then pass `connection_id` to any tool to target a specific one.
+Once connected, use `list_connections` in Claude to see all available databases, then pass `connection_id` to any tool to target a specific one.
+
+A working six-engine reference configuration is available at [`examples/connections.json`](examples/connections.json).
 
 ## MCP Tools Reference
 
-All eight tools are available to Claude once the server is running. Tools that accept a `connection_id` parameter use the default connection when the parameter is omitted.
+All nine tools are available to Claude once the server is running. Tools that accept a `connection_id` parameter use the default connection when the parameter is omitted.
 
 | Tool | Description |
 |------|-------------|
-| `execute_sql` | Execute a SQL query. Supports `table`, `json`, and `csv` output formats. Enforces the connection's security policy before execution. |
+| `list_connections` | List all registered database connections with their IDs, engines, read-only status, and descriptions. **Use this first** when multiple connections are configured. |
+| `execute_sql` | Execute a SQL (or SparkSQL / KQL) query. Supports `table`, `json`, and `csv` output formats. Enforces the connection's security policy before execution. |
+| `execute_native_query` | Execute a native non-SQL query on a document store. Pass `query` as a JSON string — a `{}` dict for MongoDB MQL filter/find, or a `[]` list for an aggregation pipeline. Use `collection` to target a specific collection. For SQL/SparkSQL/KQL engines, use `execute_sql`. |
 | `list_schemas` | List all schemas available in the connected database. |
 | `list_tables` | List tables within a schema. Accepts an optional `schema` filter and a `limit` (max 1000). |
 | `schema_discovery` | Return full column-level metadata for all tables in a schema, including data types and nullability. |
-| `get_database_info` | Return server and database metadata: engine version, database name, and connection details. |
+| `get_database_info` | Return server and database metadata: engine version, database name, query language, and connection details. |
 | `get_policy_info` | Show the active security policy for a connection: read-only status, timeout, row cap, query length limit, and banned pattern count. |
 | `check_db_connection` | Health check — verify that the connection to the database is alive. |
-| `list_connections` | List all registered database connections with their IDs, engines, and descriptions. Use this first when multiple connections are configured. |
+
+### Querying MongoDB
+
+MongoDB uses MQL, not SQL. Use `execute_native_query` with a JSON string:
+
+```
+# Find all customers in Brazil
+execute_native_query(
+  query='{"country": "Brazil"}',
+  collection="customers",
+  connection_id="app_mongodb"
+)
+
+# Aggregation pipeline — total revenue by country
+execute_native_query(
+  query='[{"$group": {"_id": "$country", "total": {"$sum": "$total"}}}]',
+  collection="orders",
+  connection_id="app_mongodb"
+)
+```
+
+## DSN Formats
+
+| Engine | DSN Format |
+|--------|-----------|
+| MSSQL | `Driver={ODBC Driver 17 for SQL Server};Server=host,port;Database=db;UID=user;PWD=pass;TrustServerCertificate=yes;` |
+| PostgreSQL | `postgresql://user:pass@host:5432/db` |
+| MySQL / MariaDB | `mysql://user:pass@host:3306/db` |
+| SQLite | `/path/to/file.db` or `:memory:` |
+| MongoDB | `mongodb://user:pass@host:27017/db?authSource=admin` |
+| Databricks | `databricks://token@<host>?http_path=<path>[&catalog=<c>][&schema=<s>]` |
+| Fabric Warehouse | `Driver={ODBC Driver 18 for SQL Server};Server=<workspace>.datawarehouse.fabric.microsoft.com;UID=user@org;PWD=pass;Authentication=ActiveDirectoryPassword;Encrypt=yes;` |
+| Fabric Eventhouse | `kql://<cluster_hostname>/<database>` |
+
+> **MongoDB note:** Users created via `MONGO_INITDB_ROOT_*` live in the `admin` database. Always append `?authSource=admin` to the DSN if authentication fails.
+
+> **Databricks note:** The DSN token is the personal access token (PAT). The `http_path` parameter is required; `catalog` and `schema` are optional and set the active context on connect.
+
+> **Fabric Warehouse note:** Use `Authentication=ActiveDirectoryPassword` with explicit `UID` and `PWD` for non-interactive/background processes. `ActiveDirectoryInteractive` requires a browser popup.
 
 ## Security
 
 sql-mcp treats security as a first-class concern, not an afterthought. Every query passes through a validation pipeline before it reaches the database.
 
-**Read-only by default.** All connections start in read-only mode. In this mode, only `SELECT` statements are permitted — any query containing `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, `CREATE`, `GRANT`, `DENY`, or `REVOKE` is rejected immediately. Write access requires an explicit `--write` flag or `"read_only": false` in the connection config.
+**Read-only by default.** All connections start in read-only mode. Only `SELECT` statements are permitted — any query containing `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, `CREATE`, `GRANT`, `DENY`, or `REVOKE` is rejected immediately. Write access requires an explicit `--write` flag or `"read_only": false` in the connection config.
 
-**Engine-specific banned patterns.** Beyond the write-operation check, each engine has a curated list of banned patterns that are blocked regardless of read/write mode:
+**Engine-specific banned patterns.** Each engine has a curated list of patterns blocked regardless of read/write mode:
 
 | Engine | Additional blocked patterns |
 |--------|-----------------------------|
@@ -215,19 +291,21 @@ sql-mcp treats security as a first-class concern, not an afterthought. Every que
 | PostgreSQL | `COPY`, `pg_read_file`, `pg_write_file`, `lo_import`, `lo_export` |
 | MySQL / MariaDB | `LOAD DATA`, `INTO OUTFILE`, `INTO DUMPFILE`, `LOAD_FILE` |
 | SQLite | `ATTACH`, `DETACH` |
+| MongoDB (MQL) | `$where`, `$function`, `$accumulator`, `$out`, `$merge` |
+| KQL (Fabric Eventhouse) | `externaldata`, `plugin` |
 | All engines | `DROP`, `ALTER`, `TRUNCATE`, `CREATE`, `GRANT`, `REVOKE` |
 
 **Multi-statement blocking.** Queries containing more than one statement (semicolons between statements, or `GO` separators in MSSQL) are rejected, preventing semicolon-chained injection attacks.
 
 **Query length cap.** Queries longer than 50,000 characters are rejected before parsing.
 
-**Per-connection row and timeout limits.** Each connection enforces an independent row cap (default 50,000, maximum 500,000) and query timeout (default 30 seconds, maximum 300 seconds). Long-running or large-result queries are terminated at the database level.
+**Per-connection row and timeout limits.** Each connection enforces an independent row cap (default 50,000, maximum 500,000) and query timeout (default 30 seconds, maximum 300 seconds).
 
 **Audit logging.** Every allowed and denied query is logged with the tool name, mode (read-only or write), and a SHA-256 hash of the SQL text. Denied queries also log the specific reason. The active security policy for any connection can be inspected at runtime via the `get_policy_info` tool.
 
 ## Configuration Reference
 
-### Single Connection (Environment Variables)
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -238,13 +316,14 @@ sql-mcp treats security as a first-class concern, not an afterthought. Every que
 | `SQL_MCP_CONNECTIONS` | — | JSON array of connection objects. Takes priority over `MSSQL_CONNECTION_STRING`. |
 | `LOG_LEVEL` | `INFO` | Log verbosity: `DEBUG`, `INFO`, `WARNING`, or `ERROR`. |
 | `LOG_FORMAT` | `json` | Log output format: `json` or `text`. |
+| `ENABLE_METRICS` | `true` | Enable Prometheus metrics collection. |
 | `MAX_QUERY_LENGTH` | `50000` | Maximum permitted query length in characters. |
 
 ### CLI Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--engine` | — | Database engine: `mssql`, `postgres`, `mysql`, `mariadb`, or `sqlite`. |
+| `--engine` | — | Database engine: `mssql`, `postgres`, `mysql`, `mariadb`, `sqlite`, `mongodb`, `databricks`, or `fabric`. |
 | `--dsn` | — | Connection string or DSN for the database. |
 | `--config` | — | Path to a `connections.json` file for multi-connection mode. |
 | `--write` | `false` | Enable write operations. Read-only by default. |
@@ -253,16 +332,16 @@ sql-mcp treats security as a first-class concern, not an afterthought. Every que
 | `--log-level` | `INFO` | Log verbosity. |
 | `--log-format` | `json` | Log format: `json` or `text`. |
 
-### Multi-Connection (JSON Config)
+### Multi-Connection JSON Config Fields
 
 Each entry in the `connections` array accepts these fields:
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `id` | string | yes | — | Unique identifier. Lowercase letters, digits, and underscores. 2–31 characters. Must start with a letter. |
-| `engine` | string | yes | — | One of: `mssql`, `postgres`, `mysql`, `mariadb`, `sqlite`. |
-| `dsn` | string | yes | — | Connection string for the database engine. |
-| `read_only` | boolean | no | `true` | When `true`, only `SELECT` queries are permitted. |
+| `engine` | string | yes | — | One of: `mssql`, `postgres`, `mysql`, `mariadb`, `sqlite`, `mongodb`, `databricks`, `fabric`. |
+| `dsn` | string | yes | — | Connection string for the database engine. See [DSN Formats](#dsn-formats). |
+| `read_only` | boolean | no | `true` | When `true`, only `SELECT` (or read-equivalent) queries are permitted. |
 | `query_timeout` | integer | no | `30` | Query timeout in seconds. Range: 1–300. |
 | `max_rows` | integer | no | `50000` | Maximum rows returned per query. Range: 1–500,000. |
 | `description` | string | no | `""` | Human-readable label shown in `list_connections`. |
@@ -283,6 +362,15 @@ pip install "sql-mcp[postgres]"
 # MySQL and MariaDB
 pip install "sql-mcp[mysql]"
 
+# MongoDB
+pip install "sql-mcp[mongodb]"
+
+# Databricks
+pip install "sql-mcp[databricks]"
+
+# Microsoft Fabric (Warehouse T-SQL + Eventhouse KQL)
+pip install "sql-mcp[fabric]"
+
 # All database drivers
 pip install "sql-mcp[all]"
 
@@ -292,13 +380,15 @@ pip install "sql-mcp[dev]"
 
 SQLite is supported without any additional extras because the `sqlite3` module is part of the Python standard library.
 
+MongoDB, Databricks, and Fabric adapters are soft-loaded — if their driver packages are absent, the server still starts for the remaining engines.
+
 ## Docker
 
 The provided Dockerfile builds an image with all database drivers pre-installed, including the Microsoft ODBC Driver 17 for SQL Server.
 
 ```bash
 # Build the image
-docker build -t sql-mcp .
+docker build -f scripts/Dockerfile -t sql-mcp .
 
 # Run with a PostgreSQL connection
 docker run --rm -i \
@@ -336,16 +426,30 @@ cd universal-db-mcp
 pip install -e ".[all,dev]"
 ```
 
-### Running Tests
+### Spinning Up Local Databases
 
-The test suite uses [testcontainers](https://testcontainers-python.readthedocs.io/) for PostgreSQL and MySQL integration tests. Docker must be running on the host for those tests to execute.
+Use Docker Compose to start Postgres, MySQL, MongoDB, and MSSQL containers:
 
 ```bash
-# Run all tests
+docker compose -f scripts/docker-compose.yml up -d
+```
+
+Then seed all local databases with the e-commerce sample dataset:
+
+```bash
+python scripts/seed_databases.py
+```
+
+### Running Tests
+
+The test suite uses [testcontainers](https://testcontainers-python.readthedocs.io/) for PostgreSQL and MySQL integration tests by default. Docker must be running on the host. Alternatively, point tests at running Docker Compose containers:
+
+```bash
+# Run all tests (testcontainers mode — spins up ephemeral containers)
 pytest
 
-# Run with coverage report
-pytest --cov=src --cov-report=term-missing
+# Run against docker-compose containers (faster, no container spin-up)
+SQL_MCP_TEST_USE_COMPOSE=1 pytest
 
 # Run only SQLite tests (no Docker required)
 pytest tests/test_adapter_sqlite.py
@@ -353,8 +457,11 @@ pytest tests/test_adapter_sqlite.py
 # Run security policy tests
 pytest tests/test_security.py
 
-# Run a specific test file
-pytest tests/test_tools.py -v
+# Run Databricks integration tests (requires live Databricks workspace)
+DATABRICKS_TEST_DSN="databricks://token@host?http_path=..." pytest tests/test_adapter_databricks.py
+
+# Run Fabric Warehouse integration tests (requires live Fabric workspace)
+FABRIC_WAREHOUSE_TEST_DSN="Driver={ODBC Driver 18...}" pytest tests/test_adapter_fabric.py
 ```
 
 ## Contributing

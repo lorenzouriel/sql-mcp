@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 
+from .adapters import ADAPTERS
+
 
 class ConnectionConfig(BaseModel):
     id: str = Field(..., pattern=r"^[a-z][a-z0-9_]{0,29}$")
@@ -13,7 +15,7 @@ class ConnectionConfig(BaseModel):
     @field_validator("engine")
     @classmethod
     def validate_engine(cls, v: str) -> str:
-        supported = {"mssql", "postgres", "mysql", "mariadb", "sqlite"}
+        supported = set(ADAPTERS.keys())
         if v not in supported:
             raise ValueError(
                 f"Unsupported engine '{v}'. Supported: {', '.join(sorted(supported))}"

@@ -3,63 +3,54 @@
     {
       "id": "dev_mssql",
       "engine": "mssql",
-      "dsn": "Driver={ODBC Driver 17 for SQL Server};Server=localhost,1434;Database=testdb;UID=sa;PWD=TestPass123!;TrustServerCertificate=yes;Encrypt=no;",
+      "dsn": "Driver={ODBC Driver 17 for SQL Server};Server=localhost,1433;Database=mydb;UID=sa;PWD=your_password;TrustServerCertificate=yes;Encrypt=no;",
       "read_only": true,
-      "description": "Local MSSQL (Docker) — testdb",
+      "description": "Local MSSQL (Docker) — mydb",
       "query_timeout": 30,
       "max_rows": 10000
     },
     {
       "id": "dev_postgres",
       "engine": "postgres",
-      "dsn": "postgresql://testuser:testpass@localhost:5432/testdb",
+      "dsn": "postgresql://user:password@localhost:5432/mydb",
       "read_only": true,
-      "description": "Local Postgres (Docker) — testdb",
+      "description": "Local Postgres (Docker) — mydb",
       "query_timeout": 30,
       "max_rows": 10000
     },
     {
       "id": "dev_mysql",
       "engine": "mysql",
-      "dsn": "mysql://testuser:testpass@localhost:3306/testdb",
+      "dsn": "mysql://user:password@localhost:3306/mydb",
       "read_only": true,
-      "description": "Local MySQL (Docker) — testdb",
+      "description": "Local MySQL (Docker) — mydb",
       "query_timeout": 30,
       "max_rows": 10000
     },
     {
       "id": "dev_mongodb",
       "engine": "mongodb",
-      "dsn": "mongodb://testuser:testpass@localhost:27017/testdb?authSource=admin",
+      "dsn": "mongodb://user:password@localhost:27017/mydb?authSource=admin",
       "read_only": true,
-      "description": "Local MongoDB (Docker) — testdb",
+      "description": "Local MongoDB (Docker) — mydb",
       "query_timeout": 30,
       "max_rows": 10000
     },
     {
       "id": "dev_databricks",
       "engine": "databricks",
-      "dsn": "databricks://mytoken@adb-1234567890.azuredatabricks.net?http_path=/sql/1.0/warehouses/abc123&catalog=main&schema=default",
+      "dsn": "databricks://your_token@your-workspace.cloud.databricks.com?http_path=/sql/1.0/warehouses/your_warehouse_id",
       "read_only": true,
-      "description": "Databricks SQL Warehouse — main catalog",
+      "description": "Databricks SQL Warehouse",
       "query_timeout": 60,
       "max_rows": 10000
     },
     {
       "id": "dev_fabric_warehouse",
       "engine": "fabric",
-      "dsn": "Driver={ODBC Driver 18 for SQL Server};Server=myworkspace.datawarehouse.fabric.microsoft.com;Database=MyWarehouse;Authentication=ActiveDirectoryInteractive;Encrypt=yes;",
+      "dsn": "Driver={ODBC Driver 18 for SQL Server};Server=your-workspace.datawarehouse.fabric.microsoft.com;UID=user@org.com;PWD=your_password;Authentication=ActiveDirectoryPassword;Encrypt=yes;",
       "read_only": true,
       "description": "Microsoft Fabric Warehouse — T-SQL",
-      "query_timeout": 60,
-      "max_rows": 10000
-    },
-    {
-      "id": "dev_fabric_eventhouse",
-      "engine": "fabric",
-      "dsn": "kql://mycluster.eastus.kusto.windows.net/MyDatabase",
-      "read_only": true,
-      "description": "Microsoft Fabric Eventhouse — KQL",
       "query_timeout": 60,
       "max_rows": 10000
     }

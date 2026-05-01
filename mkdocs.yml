@@ -1,0 +1,88 @@
+site_name: sql-mcp
+site_description: One MCP server to rule them all — connect Claude to MSSQL, PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, Databricks, and Microsoft Fabric.
+site_url: https://lorenzouriel.github.io/universal-db-mcp/
+repo_url: https://github.com/lorenzouriel/universal-db-mcp
+repo_name: lorenzouriel/universal-db-mcp
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  logo: imgs/logo-only-nobg.png
+  favicon: imgs/logo-only-nobg.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+      primary: custom
+      accent: custom
+    - scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+      primary: custom
+      accent: custom
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started.md
+    - Installation Options: installation.md
+  - Connections:
+    - Multi-Connection Setup: connections.md
+    - DSN Formats: dsn-formats.md
+  - MCP Tools: tools.md
+  - Security: security.md
+  - Configuration: configuration.md
+  - Development:
+    - Setup & Testing: development.md
+    - Docker: docker.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/lorenzouriel/universal-db-mcp
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/sql-mcp/

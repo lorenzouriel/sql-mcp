@@ -1,0 +1,264 @@
+/* ─── Brand palette ────────────────────────────────────────────────────────── */
+:root {
+  --brand-primary:   #EF4444;
+  --brand-dark:      #0B0F1A;
+  --brand-accent:    #00D1FF;
+  --brand-purple:    #7A5CFF;
+  --brand-neutral:   #F3F4F6;
+}
+
+/* ─── Dark scheme overrides ────────────────────────────────────────────────── */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        #EF4444;
+  --md-primary-fg-color--light: #F87171;
+  --md-primary-fg-color--dark:  #DC2626;
+  --md-accent-fg-color:         #00D1FF;
+
+  --md-default-bg-color:        #0B0F1A;
+  --md-default-bg-color--light: #111827;
+  --md-default-bg-color--dark:  #060A12;
+
+  --md-default-fg-color:        #F3F4F6;
+  --md-default-fg-color--light: #9CA3AF;
+
+  --md-code-bg-color:           #111827;
+  --md-code-fg-color:           #E5E7EB;
+
+  /* nav sidebar */
+  --md-nav-item--active-color:  #00D1FF;
+}
+
+/* ─── Light scheme overrides ───────────────────────────────────────────────── */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        #EF4444;
+  --md-primary-fg-color--light: #F87171;
+  --md-primary-fg-color--dark:  #DC2626;
+  --md-accent-fg-color:         #7A5CFF;
+
+  --md-default-bg-color:        #FFFFFF;
+  --md-default-fg-color:        #0B0F1A;
+  --md-default-fg-color--light: #6B7280;
+
+  --md-code-bg-color:           #F3F4F6;
+  --md-code-fg-color:           #0B0F1A;
+}
+
+/* ─── Header ───────────────────────────────────────────────────────────────── */
+.md-header {
+  background-color: var(--brand-dark) !important;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.md-header__title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Navigation tabs ──────────────────────────────────────────────────────── */
+.md-tabs {
+  background-color: var(--brand-dark) !important;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.md-tabs__link--active,
+.md-tabs__link:hover {
+  color: var(--brand-accent) !important;
+}
+
+/* ─── Hero section (index page) ────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 4rem 2rem 3rem;
+  background: linear-gradient(135deg, #0B0F1A 0%, #111827 50%, #0B0F1A 100%);
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #EF4444, #7A5CFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 1.15rem;
+  color: #9CA3AF;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.hero .badges {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  background: #EF4444;
+  color: #fff !important;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #DC2626;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #00D1FF !important;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none !important;
+  border: 1px solid #00D1FF;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 209, 255, 0.1);
+}
+
+/* ─── Engine grid (index page) ─────────────────────────────────────────────── */
+.engine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.engine-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.engine-card:hover {
+  border-color: #EF4444;
+  transform: translateY(-2px);
+}
+
+.engine-card .engine-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.engine-card .engine-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #F3F4F6;
+}
+
+.engine-card .engine-lang {
+  font-size: 0.72rem;
+  color: #6B7280;
+  margin-top: 0.15rem;
+}
+
+/* ─── Feature grid (index page) ────────────────────────────────────────────── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.feature-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.feature-card:hover {
+  border-color: #7A5CFF;
+}
+
+.feature-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  color: #F3F4F6;
+}
+
+.feature-card p {
+  font-size: 0.875rem;
+  color: #9CA3AF;
+  margin: 0;
+}
+
+/* ─── Admonitions ──────────────────────────────────────────────────────────── */
+.md-typeset .admonition,
+.md-typeset details {
+  border-left-color: #EF4444;
+}
+
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-left-color: #00D1FF;
+}
+
+.md-typeset .admonition.warning {
+  border-left-color: #F59E0B;
+}
+
+/* ─── Code blocks ──────────────────────────────────────────────────────────── */
+.md-typeset code {
+  color: #00D1FF;
+  background: rgba(0, 209, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.1em 0.3em;
+}
+
+.md-typeset pre code {
+  color: inherit;
+  background: transparent;
+  padding: 0;
+}
+
+/* ─── Tables ───────────────────────────────────────────────────────────────── */
+.md-typeset table:not([class]) th {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+
+/* ─── Footer ───────────────────────────────────────────────────────────────── */
+.md-footer {
+  background-color: var(--brand-dark);
+  border-top: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* ─── Scrollbar (dark mode) ────────────────────────────────────────────────── */
+[data-md-color-scheme="slate"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+[data-md-color-scheme="slate"] ::-webkit-scrollbar-track {
+  background: #0B0F1A;
+}
+[data-md-color-scheme="slate"] ::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}

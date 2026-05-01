@@ -94,7 +94,7 @@ Examples:
     )
     parser.add_argument(
         "--engine",
-        choices=["mssql", "postgres", "mysql", "mariadb", "sqlite"],
+        choices=["mssql", "postgres", "mysql", "mariadb", "sqlite", "mongodb", "databricks", "fabric"],
         help="Database engine",
     )
     parser.add_argument("--dsn", help="Connection string / DSN")
@@ -126,7 +126,7 @@ Examples:
         choices=["json", "text"],
         default="json",
     )
-    parser.add_argument("--version", action="version", version="sql-mcp 2.0.0")
+    parser.add_argument("--version", action="version", version="sql-mcp 3.0.0")
     return parser
 
 
@@ -140,7 +140,7 @@ async def main() -> int:
         registry = await _initialize_registry(args)
         set_registry(registry)
         logger.info(
-            "sql-mcp 2.0.0 starting | connections=%d | transport=%s",
+            "sql-mcp 3.0.0 starting | connections=%d | transport=%s",
             registry.count,
             args.transport,
         )

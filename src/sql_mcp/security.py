@@ -53,11 +53,15 @@ _ENGINE_BANNED: dict[str, list[str]] = {
     "sqlite":     _BANNED_SQLITE,
     "mongodb":    _BANNED_MONGODB,
     "databricks": _BANNED_POSTGRES,
-    "fabric":     _BANNED_MSSQL,
+    "fabric":     _BANNED_MSSQL + _BANNED_KQL,
 }
 
 # Engines whose queries must NOT be uppercased before pattern scanning
 _RAW_QUERY_ENGINES = {"mongodb"}
+
+# Engines that don't use SELECT syntax (KQL, etc.) — skip the SELECT-only check
+# in read-only mode; write operations are still blocked via WRITE_PATTERNS
+_NO_SELECT_REQUIRED = {"fabric"}
 
 
 def get_banned_patterns(engine: str) -> list[str]:
@@ -137,7 +141,9 @@ class SecurityPolicy:
                         tool_name, reason, hash_sql(sql), client_id,
                     )
                     return False, reason
-            if not re.match(r"^\s*SELECT\b", normalized):
+            if self.engine not in _NO_SELECT_REQUIRED and not re.match(
+                r"^\s*(SELECT|WITH)\b", normalized
+            ):
                 return False, "Only SELECT queries are allowed in read-only mode"
 
         logger.info(

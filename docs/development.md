@@ -3,8 +3,8 @@
 ## Clone and install
 
 ```bash
-git clone https://github.com/lorenzouriel/universal-db-mcp.git
-cd universal-db-mcp
+git clone https://github.com/lorenzouriel/sql-mcp.git
+cd sql-mcp
 
 # With uv (recommended)
 uv sync --extra all --extra dev

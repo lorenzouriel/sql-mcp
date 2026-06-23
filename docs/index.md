@@ -9,7 +9,7 @@
   </div>
   <div class="hero-buttons">
     <a href="getting-started/" class="btn-primary">Get Started</a>
-    <a href="https://github.com/lorenzouriel/universal-db-mcp" class="btn-secondary">GitHub</a>
+    <a href="https://github.com/lorenzouriel/sql-mcp" class="btn-secondary">GitHub</a>
   </div>
 </div>
 

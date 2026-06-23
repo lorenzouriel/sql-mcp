@@ -56,8 +56,8 @@ Use **ODBC Driver 17** for standard MSSQL. Use **ODBC Driver 18** for Microsoft 
 ## Using uv (recommended for development)
 
 ```bash
-git clone https://github.com/lorenzouriel/universal-db-mcp.git
-cd universal-db-mcp
+git clone https://github.com/lorenzouriel/sql-mcp.git
+cd sql-mcp
 uv sync --extra all --extra dev
 ```
 

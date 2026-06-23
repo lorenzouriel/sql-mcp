@@ -1,8 +1,8 @@
 site_name: sql-mcp
 site_description: One MCP server to rule them all — connect Claude to MSSQL, PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, Databricks, and Microsoft Fabric.
-site_url: https://lorenzouriel.github.io/universal-db-mcp/
-repo_url: https://github.com/lorenzouriel/universal-db-mcp
-repo_name: lorenzouriel/universal-db-mcp
+site_url: https://lorenzouriel.github.io/sql-mcp/
+repo_url: https://github.com/lorenzouriel/sql-mcp
+repo_name: lorenzouriel/sql-mcp
 edit_uri: edit/main/docs/
 
 theme:
@@ -83,6 +83,6 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/lorenzouriel/universal-db-mcp
+      link: https://github.com/lorenzouriel/sql-mcp
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/sql-mcp/

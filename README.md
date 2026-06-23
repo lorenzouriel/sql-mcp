@@ -419,8 +419,8 @@ When using HTTP transport, the following endpoints are available:
 ### Setup
 
 ```bash
-git clone https://github.com/lorenzouriel/universal-db-mcp.git
-cd universal-db-mcp
+git clone https://github.com/lorenzouriel/sql-mcp.git
+cd sql-mcp
 
 # Install all drivers and development dependencies
 pip install -e ".[all,dev]"
@@ -481,7 +481,7 @@ mypy src/
 
 4. Open a pull request against `main`
 
-Bug reports and feature requests can be filed on the [issue tracker](https://github.com/lorenzouriel/universal-db-mcp/issues).
+Bug reports and feature requests can be filed on the [issue tracker](https://github.com/lorenzouriel/sql-mcp/issues).
 
 ## License
 

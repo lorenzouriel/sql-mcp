@@ -78,9 +78,9 @@ dev = [
 sql-mcp = "sql_mcp.cli:run"
 
 [project.urls]
-Homepage = "https://github.com/lorenzouriel/universal-db-mcp"
-Repository = "https://github.com/lorenzouriel/universal-db-mcp.git"
-"Bug Tracker" = "https://github.com/lorenzouriel/universal-db-mcp/issues"
+Homepage = "https://github.com/lorenzouriel/sql-mcp"
+Repository = "https://github.com/lorenzouriel/sql-mcp.git"
+"Bug Tracker" = "https://github.com/lorenzouriel/sql-mcp/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

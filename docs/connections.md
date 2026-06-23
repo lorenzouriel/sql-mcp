@@ -98,4 +98,4 @@ If you omit `connection_id` with a single-connection setup, it uses the default.
 
 ## A working 6-engine example
 
-See [`examples/connections.json`](https://github.com/lorenzouriel/universal-db-mcp/blob/main/examples/connections.json) in the repository for a ready-to-use reference covering MSSQL, PostgreSQL, MySQL, MongoDB, Databricks, and Fabric.
+See [`examples/connections.json`](https://github.com/lorenzouriel/sql-mcp/blob/main/examples/connections.json) in the repository for a ready-to-use reference covering MSSQL, PostgreSQL, MySQL, MongoDB, Databricks, and Fabric.

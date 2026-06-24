@@ -43,18 +43,11 @@ extra_css:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Quick Start: getting-started.md
-    - Installation Options: installation.md
-  - Connections:
-    - Multi-Connection Setup: connections.md
-    - DSN Formats: dsn-formats.md
+  - Getting Started: getting-started.md
+  - Connections: connections.md
   - MCP Tools: tools.md
   - Security: security.md
-  - Configuration: configuration.md
-  - Development:
-    - Setup & Testing: development.md
-    - Docker: docker.md
+  - Development: development.md
 
 plugins:
   - search

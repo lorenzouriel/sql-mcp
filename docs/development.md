@@ -1,6 +1,6 @@
-# Setup & Testing
+# Development
 
-## Clone and install
+## Setup
 
 ```bash
 git clone https://github.com/lorenzouriel/sql-mcp.git
@@ -13,15 +13,11 @@ uv sync --extra all --extra dev
 pip install -e ".[all,dev]"
 ```
 
-## Start local databases
-
-Use Docker Compose to spin up Postgres 15, MySQL 8, MongoDB 7, and MSSQL 2022:
+## Local databases (Docker)
 
 ```bash
 docker compose -f scripts/docker-compose.yml up -d
 ```
-
-Services and credentials:
 
 | Service | Port | User | Password | Database |
 |---------|------|------|----------|----------|
@@ -30,68 +26,30 @@ Services and credentials:
 | MongoDB | 27017 | testuser | testpass | testdb |
 | MSSQL | 1434 | sa | TestPass123! | master |
 
-## Seed sample data
-
-Load the e-commerce dataset (customers, products, orders, order_items) into all running local databases:
+Seed sample data (customers, products, orders, order_items):
 
 ```bash
 python scripts/seed_databases.py
 ```
 
-The script skips any engine whose driver is not installed.
-
-## Run tests
-
-The test suite has two modes:
-
-=== "testcontainers (default)"
-
-    Spins up ephemeral containers per session. Docker must be running.
-
-    ```bash
-    pytest
-    ```
-
-=== "Docker Compose (faster)"
-
-    Uses already-running containers from `docker-compose.yml`.
-
-    ```bash
-    SQL_MCP_TEST_USE_COMPOSE=1 pytest
-    ```
-
-### Run specific test targets
+## Tests
 
 ```bash
-# SQLite only (no Docker required)
-pytest tests/test_adapter_sqlite.py
-
-# Security policy
-pytest tests/test_security.py
-
-# Tools layer (uses mock adapters)
-pytest tests/test_tools.py
-
-# MongoDB integration
-SQL_MCP_TEST_USE_COMPOSE=1 pytest tests/test_adapter_mongodb.py
-
-# MSSQL integration (compose-only)
-SQL_MCP_TEST_USE_COMPOSE=1 pytest tests/test_adapter_mssql.py
-
-# Databricks (requires live workspace)
-DATABRICKS_TEST_DSN="databricks://token@host?http_path=..." pytest tests/test_adapter_databricks.py
-
-# Fabric Warehouse (requires live workspace)
-FABRIC_WAREHOUSE_TEST_DSN="Driver={ODBC Driver 18...}" pytest tests/test_adapter_fabric.py
+pytest                                    # all tests (uses testcontainers)
+pytest tests/test_adapter_sqlite.py       # SQLite only (no Docker)
+pytest tests/test_security.py             # security policy
+pytest tests/test_tools.py                # tools layer (mock adapters)
 ```
 
-### Coverage report
+For tests against Docker Compose containers:
 
 ```bash
-pytest --cov=src/sql_mcp --cov-report=term-missing
+SQL_MCP_TEST_USE_COMPOSE=1 pytest
 ```
 
-## Linting and type checking
+Coverage: `pytest --cov=src/sql_mcp --cov-report=term-missing`
+
+## Linting
 
 ```bash
 black src/ tests/
@@ -99,37 +57,52 @@ ruff check src/ tests/
 mypy src/
 ```
 
+## Docker production image
+
+```bash
+docker build -f scripts/Dockerfile -t sql-mcp .
+
+# Single connection
+docker run --rm -i sql-mcp --engine postgres --dsn "postgresql://user:pass@host:5432/db"
+
+# Multi-connection
+docker run --rm -i -v /path/to/connections.json:/app/connections.json sql-mcp --config /app/connections.json
+
+# HTTP transport
+docker run --rm -p 8080:8080 sql-mcp --engine postgres --dsn "postgresql://..." --transport http --bind 0.0.0.0:8080
+```
+
+HTTP endpoints: `GET /health`, `GET /ready`, `GET /info`, `GET /metrics`
+
 ## Project structure
 
 ```
 src/sql_mcp/
-├── cli.py            # Argument parsing + server startup
-├── server.py         # FastMCP transport dispatch + HTTP routes
-├── tools.py          # All 9 MCP tool definitions
-├── models.py         # Pydantic connection config validation
-├── registry.py       # Connection registry + adapter lifecycle
+├── cli.py            # Argument parsing + startup
+├── server.py         # FastMCP transport + HTTP routes
+├── tools.py          # 9 MCP tool definitions
+├── models.py         # Pydantic config validation
+├── registry.py       # Connection registry + lifecycle
 ├── security.py       # Query validation pipeline
 ├── metrics.py        # Prometheus metrics
-├── health.py         # /health, /ready, /info handlers
-├── logging_config.py # JSON logging + sensitive data redaction
-├── utils.py          # Output formatters (table, json, csv)
+├── health.py         # Health endpoints
+├── logging_config.py # JSON logging + redaction
+├── utils.py          # Output formatters
 └── adapters/
-    ├── base.py        # DatabaseAdapter abstract base class
+    ├── base.py        # DatabaseAdapter ABC
     ├── mssql.py
     ├── postgres.py
     ├── mysql.py
     ├── sqlite.py
-    ├── mongodb.py     # MQL adapter (soft-loaded)
-    ├── databricks.py  # SparkSQL adapter (soft-loaded)
-    └── fabric.py      # T-SQL + KQL adapter (soft-loaded)
+    ├── mongodb.py     # soft-loaded
+    ├── databricks.py  # soft-loaded
+    └── fabric.py      # soft-loaded
 ```
 
 ## Adding a new adapter
 
 1. Create `src/sql_mcp/adapters/<engine>.py` implementing `DatabaseAdapter`
 2. Add a soft-import block in `src/sql_mcp/adapters/__init__.py`
-3. Register the adapter in the `ADAPTERS` dict
+3. Register in the `ADAPTERS` dict
 4. Add an optional extra in `pyproject.toml`
-5. Add fixtures in `tests/conftest.py` and a test file `tests/test_adapter_<engine>.py`
-
-The `validate_engine` validator in `models.py` automatically accepts any key added to `ADAPTERS` — no change needed there.
+5. Add test file `tests/test_adapter_<engine>.py`

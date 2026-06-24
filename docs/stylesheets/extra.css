@@ -69,10 +69,17 @@
 .hero {
   text-align: center;
   padding: 4rem 2rem 3rem;
-  background: linear-gradient(135deg, #0B0F1A 0%, #111827 50%, #0B0F1A 100%);
   border-radius: 12px;
   margin-bottom: 2rem;
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+[data-md-color-scheme="slate"] .hero {
+  background: linear-gradient(135deg, #0B0F1A 0%, #111827 50%, #0B0F1A 100%);
+}
+
+[data-md-color-scheme="default"] .hero {
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #F9FAFB 100%);
 }
 
 .hero h1 {
@@ -88,10 +95,12 @@
 
 .hero p {
   font-size: 1.15rem;
-  color: #9CA3AF;
   max-width: 600px;
   margin: 0 auto 2rem;
 }
+
+[data-md-color-scheme="slate"] .hero p { color: #9CA3AF; }
+[data-md-color-scheme="default"] .hero p { color: #4B5563; }
 
 .hero .badges {
   display: flex;
@@ -146,8 +155,6 @@
 }
 
 .engine-card {
-  background: #111827;
-  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 10px;
   padding: 1.25rem 1rem;
   text-align: center;
@@ -167,13 +174,29 @@
 .engine-card .engine-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #F3F4F6;
 }
 
 .engine-card .engine-lang {
   font-size: 0.72rem;
   color: #6B7280;
   margin-top: 0.15rem;
+}
+
+[data-md-color-scheme="slate"] .engine-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+[data-md-color-scheme="slate"] .engine-card .engine-name {
+  color: #F3F4F6;
+}
+
+[data-md-color-scheme="default"] .engine-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+[data-md-color-scheme="default"] .engine-card .engine-name {
+  color: #0B0F1A;
 }
 
 /* ─── Feature grid (index page) ────────────────────────────────────────────── */
@@ -185,8 +208,6 @@
 }
 
 .feature-card {
-  background: #111827;
-  border: 1px solid rgba(255,255,255,0.07);
   border-radius: 10px;
   padding: 1.5rem;
   transition: border-color 0.2s;
@@ -200,14 +221,27 @@
   font-size: 1rem;
   font-weight: 700;
   margin: 0 0 0.4rem;
-  color: #F3F4F6;
 }
 
 .feature-card p {
   font-size: 0.875rem;
-  color: #9CA3AF;
   margin: 0;
 }
+
+[data-md-color-scheme="slate"] .feature-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+[data-md-color-scheme="slate"] .feature-card h3 { color: #F3F4F6; }
+[data-md-color-scheme="slate"] .feature-card p { color: #9CA3AF; }
+
+[data-md-color-scheme="default"] .feature-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+[data-md-color-scheme="default"] .feature-card h3 { color: #0B0F1A; }
+[data-md-color-scheme="default"] .feature-card p { color: #4B5563; }
 
 /* ─── Admonitions ──────────────────────────────────────────────────────────── */
 .md-typeset .admonition,

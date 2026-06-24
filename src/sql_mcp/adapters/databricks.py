@@ -99,38 +99,58 @@ class DatabricksAdapter(DatabaseAdapter):
             finally:
                 cursor.close()
 
-        return await asyncio.to_thread(_execute)
+        try:
+            return await asyncio.wait_for(
+                asyncio.to_thread(_execute), timeout=timeout
+            )
+        except asyncio.TimeoutError:
+            raise RuntimeError(
+                f"Query timed out after {timeout}s. "
+                f"Try narrowing your query or specifying a schema."
+            )
 
     async def list_schemas(self) -> list[str]:
-        if self._catalog:
-            result = await self.execute_query(
-                f"SHOW SCHEMAS IN `{self._catalog}`", timeout=15, max_rows=500
-            )
-        else:
-            result = await self.execute_query("SHOW SCHEMAS", timeout=15, max_rows=500)
+        catalog = self._catalog or "main"
+        result = await self.execute_query(
+            f"SELECT DISTINCT table_schema "
+            f"FROM `{catalog}`.information_schema.tables "
+            f"WHERE table_catalog = '{catalog}' "
+            f"ORDER BY table_schema",
+            timeout=30, max_rows=500,
+        )
         if not result:
             return []
-        first = result[0]
-        key = next(
-            (k for k in first if "namespace" in k.lower() or "schema" in k.lower()), None
-        )
-        if not key:
-            return []
-        if self._catalog:
-            return [f"{self._catalog}.{r[key]}" for r in result]
-        return [r[key] for r in result]
+        key = list(result[0].keys())[0]
+        return [f"{catalog}.{r[key]}" for r in result]
 
     async def list_tables(
         self,
         schema: str | None = None,
         limit: int = 200,
     ) -> list[dict[str, Any]]:
-        scope = f"IN `{schema}`" if schema else ""
-        result = await self.execute_query(f"SHOW TABLES {scope}", timeout=30, max_rows=limit)
+        catalog = self._catalog or "main"
+        if not schema:
+            default_schema = f"{catalog}.default"
+            return [
+                {
+                    "schema_name": "",
+                    "table_name": f"(specify a schema to list tables, e.g. '{default_schema}')",
+                    "row_count": None,
+                }
+            ]
+        schema_name = schema.split(".")[-1] if "." in schema else schema
+        result = await self.execute_query(
+            f"SELECT table_schema, table_name "
+            f"FROM `{catalog}`.information_schema.tables "
+            f"WHERE table_catalog = '{catalog}' "
+            f"AND table_schema = '{schema_name}' "
+            f"ORDER BY table_name",
+            timeout=30, max_rows=limit,
+        )
         return [
             {
-                "schema_name": r.get("database") or r.get("namespace") or schema or "",
-                "table_name": r.get("tableName") or r.get("table_name") or "",
+                "schema_name": r.get("table_schema", schema_name),
+                "table_name": r.get("table_name", ""),
                 "row_count": None,
             }
             for r in result
